@@ -89,25 +89,25 @@ class AgentRuntime:
 
     def _build_graph(self):
         graph = StateGraph(WorkforceState)
-        graph.add_node("plan", self._plan)
-        graph.add_node("research", self._research)
-        graph.add_node("delegate", self._delegate)
-        graph.add_node("critique", self._critique)
-        graph.add_node("verify", self._verify)
-        graph.add_node("execute", self._execute)
-        graph.add_node("learn", self._learn)
-        graph.add_edge(START, "plan")
-        graph.add_edge("plan", "research")
-        graph.add_edge("research", "delegate")
-        graph.add_edge("delegate", "critique")
-        graph.add_edge("critique", "verify")
+        graph.add_node("stage_plan", self._plan)
+        graph.add_node("stage_research", self._research)
+        graph.add_node("stage_delegate", self._delegate)
+        graph.add_node("stage_critique", self._critique)
+        graph.add_node("stage_verify", self._verify)
+        graph.add_node("stage_execute", self._execute)
+        graph.add_node("stage_learn", self._learn)
+        graph.add_edge(START, "stage_plan")
+        graph.add_edge("stage_plan", "stage_research")
+        graph.add_edge("stage_research", "stage_delegate")
+        graph.add_edge("stage_delegate", "stage_critique")
+        graph.add_edge("stage_critique", "stage_verify")
         graph.add_conditional_edges(
-            "verify",
+            "stage_verify",
             lambda state: "approval" if state["approval_required"] else "execute",
-            {"approval": END, "execute": "execute"},
+            {"approval": END, "execute": "stage_execute"},
         )
-        graph.add_edge("execute", "learn")
-        graph.add_edge("learn", END)
+        graph.add_edge("stage_execute", "stage_learn")
+        graph.add_edge("stage_learn", END)
         return graph.compile()
 
     def _agents(self, organization_id: str) -> dict[str, Agent]:
