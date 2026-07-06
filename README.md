@@ -12,6 +12,5 @@ Open the web app at `http://localhost:3000` and the API at `http://localhost:800
 
 Default seeded login:
 
-- Email: `founder@nexus.local`
+- Email: `founder@nexus.dev`
 - Password: `NexusPass123!`
-

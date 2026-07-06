@@ -8,11 +8,11 @@ from nexus_api.services.org_factory import create_organization_with_workforce
 
 
 def seed_demo(db: Session) -> None:
-    existing = db.scalar(select(User).where(User.email == "founder@nexus.local"))
+    existing = db.scalar(select(User).where(User.email == "founder@nexus.dev"))
     if existing:
         return
     user = User(
-        email="founder@nexus.local",
+        email="founder@nexus.dev",
         name="NEXUS Founder",
         hashed_password=hash_password("NexusPass123!"),
     )
@@ -34,4 +34,3 @@ def seed_demo(db: Session) -> None:
         importance=0.84,
         meta={"seeded": True},
     )
-

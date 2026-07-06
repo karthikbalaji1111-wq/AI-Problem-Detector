@@ -13,7 +13,7 @@ from nexus_api.main import app
 def auth_headers(client: TestClient) -> dict[str, str]:
     response = client.post(
         "/v1/auth/login",
-        json={"email": "founder@nexus.local", "password": "NexusPass123!"},
+        json={"email": "founder@nexus.dev", "password": "NexusPass123!"},
     )
     assert response.status_code == 200, response.text
     token = response.json()["access_token"]
@@ -52,4 +52,3 @@ def test_agent_run_creates_trace_and_analytics() -> None:
         analytics = client.get(f"/v1/organizations/{organization_id}/analytics", headers=headers)
         assert analytics.status_code == 200, analytics.text
         assert analytics.json()["active_agents"] >= 20
-

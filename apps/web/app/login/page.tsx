@@ -15,7 +15,7 @@ import { storeSession } from "@/lib/auth";
 function LoginContent() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("founder@nexus.local");
+  const [email, setEmail] = useState("founder@nexus.dev");
   const [name, setName] = useState("NEXUS Founder");
   const [password, setPassword] = useState("NexusPass123!");
 
@@ -137,4 +137,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-
