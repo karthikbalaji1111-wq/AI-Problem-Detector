@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexus-config
+  namespace: nexus
+data:
+  NEXUS_CORS_ORIGINS: "https://nexus.example.com"
+  NEXUS_FRONTEND_URL: "https://nexus.example.com"
+  NEXUS_SEED_DEMO: "false"
+  NEXT_PUBLIC_API_BASE: "https://nexus.example.com"
+

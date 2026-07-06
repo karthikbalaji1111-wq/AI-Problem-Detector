@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexus-web
+  namespace: nexus
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nexus-web
+  template:
+    metadata:
+      labels:
+        app: nexus-web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/example/nexus-web:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: nexus-config
+          readinessProbe:
+            httpGet:
+              path: /dashboard
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexus-web
+  namespace: nexus
+spec:
+  selector:
+    app: nexus-web
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+

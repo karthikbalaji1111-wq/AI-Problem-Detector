@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     access_token_minutes: int = 60 * 12
     refresh_token_days: int = 14
     cors_origins: Annotated[list[str], BeforeValidator(parse_csv)] = ["http://localhost:3000"]
+    frontend_url: str = "http://localhost:3000"
     rate_limit_per_minute: int = 180
     seed_demo: bool = True
     encryption_key: str | None = None
@@ -36,4 +37,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-
