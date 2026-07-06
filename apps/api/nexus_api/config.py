@@ -1,13 +1,9 @@
 from functools import lru_cache
-from typing import Annotated
-
-from pydantic import AnyHttpUrl, BeforeValidator, Field
+from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def parse_csv(value: str | list[str]) -> list[str]:
-    if isinstance(value, list):
-        return value
+def parse_csv(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
@@ -22,7 +18,7 @@ class Settings(BaseSettings):
     secret_key: str = Field(min_length=32, default="local-development-secret-change-for-production")
     access_token_minutes: int = 60 * 12
     refresh_token_days: int = 14
-    cors_origins: Annotated[list[str], BeforeValidator(parse_csv)] = ["http://localhost:3000"]
+    cors_origins: str = "http://localhost:3000"
     frontend_url: str = "http://localhost:3000"
     rate_limit_per_minute: int = 180
     seed_demo: bool = True
@@ -32,6 +28,10 @@ class Settings(BaseSettings):
     google_redirect_uri: AnyHttpUrl | None = None
     openai_api_key: str | None = None
     otlp_endpoint: str | None = None
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return parse_csv(self.cors_origins)
 
 
 @lru_cache

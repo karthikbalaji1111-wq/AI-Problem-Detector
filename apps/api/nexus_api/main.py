@@ -2,8 +2,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-
 from nexus_api.config import get_settings
 from nexus_api.database import SessionLocal, create_db_and_tables
 from nexus_api.rate_limit import RateLimitMiddleware
@@ -33,7 +31,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=settings.cors_origin_list,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -56,4 +54,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
