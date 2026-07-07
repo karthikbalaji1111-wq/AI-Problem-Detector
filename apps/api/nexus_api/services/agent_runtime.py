@@ -134,6 +134,73 @@ class AgentRuntime:
         agents = self.db.scalars(select(Agent).where(Agent.organization_id == organization_id)).all()
         return {agent.role_key: agent for agent in agents}
 
+    def _ensure_state_defaults(self, state: dict) -> None:
+        state.setdefault("plan", [])
+        state.setdefault("evidence", [])
+        state.setdefault("delegation", [])
+        state.setdefault("critique", [])
+        state.setdefault("verification", {})
+        state.setdefault("execution", [])
+        state.setdefault("tool_calls", [])
+        state.setdefault("stage_history", [])
+        state.setdefault("memories_written", [])
+        state.setdefault("current_stage", "restored")
+        state.setdefault("confidence", 0.0)
+        state.setdefault("risk_score", 0.0)
+        state.setdefault("approval_required", False)
+
+    def _checkpoint(self, state: WorkforceState, stage: str, role_key: str, meta: dict) -> None:
+        state["current_stage"] = stage
+        state["stage_history"].append(
+            {
+                "stage": stage,
+                "agent": role_key,
+                "confidence": state["confidence"],
+                "risk_score": state["risk_score"],
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+        )
+        run = self.db.get(AgentRun, state["run_id"])
+        if run:
+            run.state = dict(state)
+            run.confidence = state["confidence"]
+            run.risk_score = state["risk_score"]
+            self.db.commit()
+        record_audit(
+            self.db,
+            organization_id=state["organization_id"],
+            actor_type="agent",
+            actor_id=role_key,
+            action=f"workflow.stage.{stage}",
+            target_type="agent_run",
+            target_id=state["run_id"],
+            metadata={"trace_id": state["trace_id"], **meta},
+        )
+
+    def _remember_event(
+        self,
+        state: WorkforceState,
+        role_key: str,
+        memory_type: str,
+        content: str,
+        importance: float,
+        meta: dict,
+    ) -> None:
+        agents = self._agents(state["organization_id"])
+        agent = agents.get(role_key)
+        memory = remember(
+            self.db,
+            organization_id=state["organization_id"],
+            agent_id=agent.id if agent else None,
+            memory_type=memory_type,
+            content=content,
+            importance=importance,
+            meta={"run_id": state["run_id"], "trace_id": state["trace_id"], **meta},
+        )
+        state["memories_written"].append(
+            {"id": memory.id, "agent": role_key, "memory_type": memory_type, "importance": importance}
+        )
+
     def _next_sequence(self, run_id: str) -> int:
         current = self.db.scalar(
             select(func.max(AgentMessage.sequence)).where(AgentMessage.run_id == run_id)
