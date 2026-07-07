@@ -1,4 +1,6 @@
 from functools import lru_cache
+from typing import Literal
+
 from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -28,6 +30,8 @@ class Settings(BaseSettings):
     google_redirect_uri: AnyHttpUrl | None = None
     openai_api_key: str | None = None
     otlp_endpoint: str | None = None
+    agent_execution_mode: Literal["auto", "inline", "queue"] = "auto"
+    queue_publish_timeout_seconds: float = 1.5
 
     @property
     def cors_origin_list(self) -> list[str]:
