@@ -5,6 +5,7 @@ from langgraph.graph import END, START, StateGraph
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from nexus_api.audit import record_audit
 from nexus_api.models import (
     Agent,
     AgentMessage,
@@ -30,6 +31,10 @@ class WorkforceState(TypedDict):
     critique: list[dict]
     verification: dict
     execution: list[dict]
+    tool_calls: list[dict]
+    stage_history: list[dict]
+    memories_written: list[dict]
+    current_stage: str
     confidence: float
     risk_score: float
     approval_required: bool
@@ -54,11 +59,25 @@ class AgentRuntime:
             "critique": [],
             "verification": {},
             "execution": [],
+            "tool_calls": [],
+            "stage_history": [],
+            "memories_written": [],
+            "current_stage": "running",
             "confidence": 0.0,
             "risk_score": 0.0,
             "approval_required": False,
         }
-        final_state = graph.invoke(initial)
+        try:
+            final_state = graph.invoke(initial)
+        except Exception as exc:
+            run.status = RunStatus.FAILED.value
+            run.state = {
+                **initial,
+                "failure": {"error": str(exc), "stage": initial["current_stage"]},
+            }
+            run.completed_at = datetime.now(UTC)
+            self.db.commit()
+            raise
         run.state = dict(final_state)
         run.confidence = final_state["confidence"]
         run.risk_score = final_state["risk_score"]
@@ -75,6 +94,7 @@ class AgentRuntime:
         state = dict(run.state)
         if not state:
             raise ValueError("Run has no persisted state")
+        self._ensure_state_defaults(state)
         state["approval_required"] = False
         state = self._execute(state)
         state = self._learn(state)
