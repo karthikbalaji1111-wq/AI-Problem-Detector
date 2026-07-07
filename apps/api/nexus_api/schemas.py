@@ -80,7 +80,7 @@ class AgentRead(BaseModel):
 
 class HierarchyNode(BaseModel):
     agent: AgentRead
-    children: list["HierarchyNode"] = []
+    children: list["HierarchyNode"] = Field(default_factory=list)
 
 
 class OrganizationDetail(BaseModel):
@@ -193,7 +193,7 @@ class ConnectorUpsert(BaseModel):
 
 class ConnectorInvoke(BaseModel):
     action: str = Field(min_length=2, max_length=80)
-    payload: dict[str, Any] = {}
+    payload: dict[str, Any] = Field(default_factory=dict)
 
 
 class ConnectorRead(BaseModel):
@@ -221,4 +221,3 @@ class GoogleAuthStart(BaseModel):
 
 TokenResponse.model_rebuild()
 HierarchyNode.model_rebuild()
-
