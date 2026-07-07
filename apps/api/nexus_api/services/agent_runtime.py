@@ -279,6 +279,15 @@ class AgentRuntime:
             0.68,
             {"plan": steps, "streaming": True, "observability": {"trace_id": state["trace_id"]}},
         )
+        self._remember_event(
+            state,
+            "planner_agent",
+            "working",
+            f"Active plan for run {state['run_id']}: {len(steps)} staged steps for {state['objective']}.",
+            0.66,
+            {"stage": "plan"},
+        )
+        self._checkpoint(state, "plan", "planner_agent", {"steps": len(steps)})
         return state
 
     def _research(self, state: WorkforceState) -> WorkforceState:
@@ -309,6 +318,15 @@ class AgentRuntime:
             0.71,
             {"evidence": evidence},
         )
+        self._remember_event(
+            state,
+            "retriever_agent",
+            "semantic",
+            f"Retrieved {len(evidence)} evidence records for objective: {state['objective']}",
+            0.64,
+            {"stage": "research", "sources": [item["source"] for item in evidence]},
+        )
+        self._checkpoint(state, "research", "research_agent", {"evidence_count": len(evidence)})
         return state
 
     def _delegate(self, state: WorkforceState) -> WorkforceState:
@@ -338,6 +356,15 @@ class AgentRuntime:
             0.74,
             {"delegation": delegation},
         )
+        self._remember_event(
+            state,
+            "coordinator_agent",
+            "agent_history",
+            f"Delegated run {state['run_id']} to: {', '.join(item['agent'] for item in delegation)}.",
+            0.7,
+            {"stage": "delegate", "agents": [item["agent"] for item in delegation]},
+        )
+        self._checkpoint(state, "delegate", "supervisor_agent", {"delegate_count": len(delegation)})
         return state
 
     def _critique(self, state: WorkforceState) -> WorkforceState:
@@ -373,6 +400,15 @@ class AgentRuntime:
             0.76,
             {"risks": risks},
         )
+        self._remember_event(
+            state,
+            "critic_agent",
+            "reflection",
+            f"Critique for run {state['run_id']}: highest risk is {max(risks, key=lambda item: item['severity'])['risk']}.",
+            0.72,
+            {"stage": "critique", "risks": risks},
+        )
+        self._checkpoint(state, "critique", "critic_agent", {"risk_count": len(risks)})
         return state
 
     def _verify(self, state: WorkforceState) -> WorkforceState:
